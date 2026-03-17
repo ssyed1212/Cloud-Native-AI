@@ -1,0 +1,54 @@
+• Where in the code is the AI model called?
+
+  The AI model is called inside the call_model() function, in the requests.post()
+  call (around lines 11–22 in lab1.py). Specifically, the invocation happens when
+  the program sends an HTTP POST request to OpenRouter’s chat completions
+  endpoint: "https://openrouter.ai/api/v1/chat/completions". The comment
+  "AI service is invoked here via OpenRouter chat completions API" marks that
+  spot. The model name (e.g. x-ai/grok-code-fast-1) and the user message are
+  sent in the JSON body; the response contains the model’s generated text.
+
+
+• How is this different from using a chat interface?
+
+  In a chat interface you type in a browser or app and see replies in a UI.
+  Here, the program calls the same kind of API that a chat UI would use, but
+  from code: it sends the prompt in a structured HTTP request and gets back
+  JSON. There is no browser, no click-to-send, and no persistent conversation
+  unless you build it. The program can automate calls, change the prompt
+  dynamically, and use the response inside other logic (e.g. print length,
+  parse, or pass to another service). So it’s the same underlying AI, but
+  invoked programmatically instead of through a human-driven chat window.
+
+
+• What would happen if this function were called thousands of times?
+
+  Each call does a network request to OpenRouter, so thousands of calls mean
+  thousands of requests. Consequences include:
+  - Rate limits: the provider may throttle or block you after a certain
+    number of requests per minute.
+  - Cost: OpenRouter charges per token; thousands of calls can add up quickly.
+  - Latency: each call waits on the network and the model; running them
+    one-by-one could take a long time.
+  - Reliability: some requests may fail (timeouts, 5xx errors); the code
+    doesn’t retry or batch, so you’d need to add that for production use.
+
+  To handle thousands of calls you’d typically add batching, rate limiting,
+  retries, and possibly async or parallel requests, while staying within
+  the provider’s limits and your budget.
+
+
+• Why does this count as cloud-native computation?
+
+  The model runs in the cloud, not on your machine. Your code only sends a
+  request over the internet and gets a response; it doesn’t load or run the
+  model locally. That fits cloud-native in several ways:
+  - The compute (inference) is done by a remote service (OpenRouter / the
+    underlying model provider), scaled and managed by them.
+  - Your app uses a standard HTTP API, so it can run anywhere (your laptop,
+    a container, or a server) and still call the same service.
+  - You consume AI as a service (API) rather than hosting the model yourself,
+    which is typical of cloud-native “services over the network” design.
+
+  So the “computation” (the actual AI work) happens in the cloud; your program
+  is a client of that cloud service.
