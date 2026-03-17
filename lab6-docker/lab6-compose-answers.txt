@@ -1,0 +1,34 @@
+Docker Compose understanding (Lab 6)
+
+1) what problem does Docker Compose solve vs running containers manually?
+- it lets you define and run multiple related containers (services), networks, ports, and env config in one file and bring them up/down together with one command, instead of coordinating multiple `docker build`/`docker run` commands by hand.
+
+2) build: vs image:
+- `build:` tells compose to build an image from a Dockerfile/context (optionally with args) before running.
+- `image:` tells compose which prebuilt image name/tag to run (and optionally pull).
+- use `build:` during development or when you ship a Dockerfile; use `image:` when you want to run something already built/published (e.g., `postgres:16`, or your CI-built app image).
+
+3) how do services communicate in the same compose file?
+- compose creates a default network and attaches all services to it; each service is discoverable by DNS name equal to the service name.
+- `http://backend:8000` works inside the frontend container because `backend` is a DNS name on that compose network that resolves to the backend container’s IP, and `8000` is the backend container port.
+
+4) what does depends_on guarantee? what does it not guarantee?
+- it guarantees startup order (compose will start the dependency service container first).
+- it does not guarantee the dependency is “ready” (e.g., HTTP server listening, DB accepting connections) unless you add explicit healthchecks + condition support, or handle retries in the app.
+
+5) how does compose support basic scaling? what assumptions must hold?
+- you can run multiple replicas of a service (e.g., `docker compose up --scale web=3`), creating multiple containers for that service.
+- assumptions: the service should be stateless (or share state safely), handle concurrency, and any required load balancing/routing must exist (compose DNS gives multiple A records; not all clients load-balance well). host-port publishing also becomes tricky if each replica needs a unique host port.
+
+6) why use environment variables for compose configuration? why not commit .env publicly?
+- env vars separate config from image/code (ports, URLs, tokens) so the same compose file can run across machines/environments without editing YAML.
+- `.env` often contains secrets (api keys, tokens) and committing it publicly can leak credentials and allow unauthorized usage/costs; even placeholders can teach attackers what to target.
+
+7) if a container crashes under compose, what happens by default? how to improve?
+- by default, it does not automatically restart unless a restart policy is set (it may just stop and show as exited).
+- improve by adding a restart policy (e.g., `restart: unless-stopped` or `restart: on-failure`) and healthchecks so unhealthy services can be detected; also add logging/limits as needed.
+
+8) why is compose appropriate for this lab?
+- it’s a lightweight way to orchestrate a small multi-service app locally (frontend + backend) with networking and config, without the operational complexity of Kubernetes or other orchestrators.
+- it teaches the core concepts (images, services, networks, env config, ports, dependencies) that map directly to more advanced tools later.
+
