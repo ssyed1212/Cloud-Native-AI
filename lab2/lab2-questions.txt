@@ -1,0 +1,23 @@
+• What does self mean in a method definition?
+
+  self is the instance the method is called on. When you call obj.method(), Python passes obj as the first argument, which by convention is named self. Inside the method, self refers to that same object, so you can read and set its attributes (e.g. self._messages, self.name).
+
+
+• Where are instance variables created in Python?
+
+  Instance variables are created by assigning to self inside a method, usually in __init__. For example, in __init__ we do self._messages = [] or self.name = name. That creates (or updates) an attribute on the instance. They are not declared elsewhere; they exist once you assign to self.attribute_name.
+
+
+• What is the purpose of __init__?
+
+  __init__ is the initializer (constructor) for a class. It runs when you create an instance (e.g. Logger() or Service(...)). Its purpose is to set up the new object: create instance variables, store arguments, and put the object into a valid starting state. It does not return a value; the new instance is already being created when __init__ runs.
+
+
+• What does a unit test do, and why is it useful with AI-generated code?
+
+  A unit test checks one small piece of behavior (e.g. one function or method) in isolation: call it with given inputs and assert the outputs or side effects are correct. With AI-generated code, tests give you a fast, repeatable way to verify that the code does what the spec says. If the AI (or a refactor) breaks something, the tests fail immediately, so you catch bugs early and can change code with more confidence.
+
+
+• In ToDo 2, why is Service using composition rather than inheritance?
+
+  Service has a Logger; it doesn’t extend Logger. That’s composition: one object holds another and uses it. We use it here because a Service is not a kind of Logger—it’s a service that uses a logger. Composition keeps responsibilities separate (logging vs. business logic), makes it easy to swap or mock the logger in tests, and avoids the rigidity and coupling that can come from deep inheritance. So “has a” (composition) fits better than “is a” (inheritance) for Service and Logger.
