@@ -26,7 +26,7 @@ if __name__ == "__main__":
     if not API_KEY:
         print("Error: OPENROUTER_API_KEY is not set in your environment.")
         exit(1)
-    result = call_model("Explain cloud-native systems in two sentences.")
+    result = call_model("Explain cloud-native systems in a short bullet-point summary.")
     if "error" in result:
         print("API error:", result["error"].get("message", result["error"]))
     elif "choices" in result and result["choices"]:
