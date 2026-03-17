@@ -1,0 +1,2 @@
+python hello.py
+setx OPENROUTER_API_KEY "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"
