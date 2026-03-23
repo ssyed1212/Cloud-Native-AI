@@ -1,4 +1,5 @@
 import httpx
+from typing import Optional
 
 from app.config import DEFAULT_MODEL, OPENROUTER_API_KEY, OPENROUTER_URL
 from app.retry import NoRetryError, retry_async
@@ -9,7 +10,7 @@ class OpenRouterClient:
         self,
         model: str = DEFAULT_MODEL,
         timeout_s: float = 15.0,
-        api_key: str | None = None,
+        api_key: Optional[str] = None,
     ) -> None:
         self.model = model
         self.timeout_s = timeout_s
