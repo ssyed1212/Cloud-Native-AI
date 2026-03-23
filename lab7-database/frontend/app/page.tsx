@@ -11,7 +11,13 @@ export default function Home() {
     isLoading,
     input,
     handleInputChange,
-  } = useCompletion();
+  } = useCompletion({
+    // Lab 7: browser calls Next.js /api/summarize only (see agents.md).
+    api: "/api/summarize",
+    // Plain-text response body (non-streaming chunking still works with streamProtocol "text").
+    streamProtocol: "text",
+    body: { max_length: 100 },
+  });
 
   const [validationError, setValidationError] = useState("");
 

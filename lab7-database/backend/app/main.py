@@ -1,3 +1,6 @@
+import time
+from contextlib import asynccontextmanager
+
 import httpx
 from fastapi import Depends, FastAPI, HTTPException, Request
 
@@ -7,12 +10,23 @@ from app.config import (
     OPENROUTER_MODEL,
     OPENROUTER_URL,
 )
-from app.db import fetch_recent_summaries, insert_summary
+from app.db import ensure_schema, fetch_recent_summaries, insert_summary
 from app.models import SummarizeRequest, SummarizeResponse, SummaryRow
 
-app = FastAPI(title="lab4")
+# Fallback if OPENROUTER_MODEL is unset or invalid in .env (OpenRouter model id).
+DEFAULT_OPENROUTER_MODEL = "mistralai/mistral-7b-instruct-v0.1"
 
 DEV_TOKEN = "dev-token"
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    if DATABASE_URL:
+        ensure_schema(database_url=DATABASE_URL)
+    yield
+
+
+app = FastAPI(title="lab7-database", lifespan=lifespan)
 
 
 def require_auth(request: Request) -> None:
@@ -52,7 +66,10 @@ def summarize(
         f"Output only the summary, no preamble.\n\n{body.text}"
     )
 
+    model = OPENROUTER_MODEL or DEFAULT_OPENROUTER_MODEL
+
     try:
+        t0 = time.perf_counter()
         with httpx.Client(timeout=30.0) as client:
             response = client.post(
                 OPENROUTER_URL,
@@ -61,16 +78,27 @@ def summarize(
                     "Content-Type": "application/json",
                 },
                 json={
-                    "model": OPENROUTER_MODEL or "mistralai/mistral-7b-instruct:free",
+                    "model": model,
                     "messages": [{"role": "user", "content": prompt}],
                 },
             )
             response.raise_for_status()
             data = response.json()
+        latency_ms = int((time.perf_counter() - t0) * 1000)
+    except httpx.HTTPStatusError as e:
+        snippet = ""
+        try:
+            snippet = e.response.text[:400]
+        except Exception:
+            snippet = ""
+        raise HTTPException(
+            status_code=503,
+            detail=f"Upstream summarization failed for model={model!r}: status={e.response.status_code} {snippet}",
+        ) from e
     except (httpx.HTTPError, httpx.TimeoutException) as e:
         raise HTTPException(
             status_code=503,
-            detail=f"Upstream summarization failed: {e!s}",
+            detail=f"Upstream summarization failed for model={model!r}: {e!s}",
         ) from e
 
     if "error" in data:
@@ -110,10 +138,11 @@ def summarize(
             database_url=DATABASE_URL,
             input_text=body.text,
             summary_text=summary,
-            model=OPENROUTER_MODEL or "mistralai/mistral-7b-instruct:free",
+            model=model,
             prompt_tokens=int(prompt_tokens) if prompt_tokens is not None else None,
             completion_tokens=int(completion_tokens) if completion_tokens is not None else None,
             total_tokens=int(total_tokens) if total_tokens is not None else None,
+            latency_ms=latency_ms,
         )
     except Exception as e:
         raise HTTPException(
@@ -123,7 +152,7 @@ def summarize(
 
     return SummarizeResponse(
         summary=summary,
-        model=OPENROUTER_MODEL or "mistralai/mistral-7b-instruct:free",
+        model=model,
         truncated=truncated,
     )
 

@@ -6,6 +6,7 @@ CREATE TABLE IF NOT EXISTS summaries (
   prompt_tokens INTEGER,
   completion_tokens INTEGER,
   total_tokens INTEGER,
+  latency_ms INTEGER,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
