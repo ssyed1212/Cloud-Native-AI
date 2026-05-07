@@ -15,9 +15,9 @@ frontend:
         - '[ -d car-cloud/frontend ] && cd car-cloud/frontend || true'
         - npm run build
   artifacts:
-    baseDirectory: .next
+    baseDirectory: car-cloud/frontend/.next
     files:
       - "**/*"
   cache:
     paths:
-      - node_modules/**/*
+      - car-cloud/frontend/node_modules/**/*
