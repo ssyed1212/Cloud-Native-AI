@@ -1,21 +1,23 @@
 # Amplify build for Car Cloud Next.js app in this monorepo.
-# Install/build run inside car-cloud/frontend so npm ci finds package-lock.json.
-# If your Amplify app sets "App root" to car-cloud/frontend already, remove the
-# `cd car-cloud/frontend &&` prefixes and set baseDirectory to `.next` only.
+# Commands below handle both execution contexts:
+# - repo root (Cloud-Native-AI)
+# - app root already set to car-cloud/frontend
 version: 1
 frontend:
   phases:
     preBuild:
       commands:
         - nvm use 20 || nvm install 20
-        - cd car-cloud/frontend && npm ci
+        - '[ -d car-cloud/frontend ] && cd car-cloud/frontend || true'
+        - npm ci
     build:
       commands:
-        - cd car-cloud/frontend && npm run build
+        - '[ -d car-cloud/frontend ] && cd car-cloud/frontend || true'
+        - npm run build
   artifacts:
-    baseDirectory: car-cloud/frontend/.next
+    baseDirectory: .next
     files:
       - "**/*"
   cache:
     paths:
-      - car-cloud/frontend/node_modules/**/*
+      - node_modules/**/*
