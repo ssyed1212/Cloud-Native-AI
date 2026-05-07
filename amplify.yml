@@ -3,21 +3,21 @@
 # - repo root (Cloud-Native-AI)
 # - app root already set to car-cloud/frontend
 version: 1
-frontend:
-  phases:
-    preBuild:
-      commands:
-        - nvm use 20 || nvm install 20
-        - '[ -d car-cloud/frontend ] && cd car-cloud/frontend || true'
-        - npm ci
-    build:
-      commands:
-        - '[ -d car-cloud/frontend ] && cd car-cloud/frontend || true'
-        - npm run build
-  artifacts:
-    baseDirectory: car-cloud/frontend/.next
-    files:
-      - "**/*"
-  cache:
-    paths:
-      - car-cloud/frontend/node_modules/**/*
+applications:
+  - appRoot: car-cloud/frontend
+    frontend:
+      phases:
+        preBuild:
+          commands:
+            - nvm use 20 || nvm install 20
+            - npm ci
+        build:
+          commands:
+            - npm run build
+      artifacts:
+        baseDirectory: .next
+        files:
+          - "**/*"
+      cache:
+        paths:
+          - node_modules/**/*
